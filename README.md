@@ -28,3 +28,4 @@ for i in `seq 0 5`; do python submitProd.py  -r ${i} -o /afs/cern.ch/work/o/ocol
 
 ## use option -S to test the script locally
 ## to write to eos, one might replace -o /afs/cern.ch/work/o/ocolegro/test/ with -e /store/user/ocolegro/test.
+# PFCALEEVis
