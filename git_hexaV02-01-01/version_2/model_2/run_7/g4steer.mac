@@ -4,5 +4,5 @@
 /event/verbose 0
 /tracking/verbose 0
 /N03/det/setModel 2
-/random/setSeeds 38230 48158
+/random/setSeeds 68747 80001
 /run/beamOn 5000

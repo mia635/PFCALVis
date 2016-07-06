@@ -1,6 +1,6 @@
 #include "G4RunManager.hh"
 #include "G4UImanager.hh"
-//kjgjhg
+
 #include "Randomize.hh"
 
 #include "DetectorConstruction.hh"
@@ -9,10 +9,12 @@
 
 #include "PrimaryGeneratorAction.hh"
 #include "LHEPrimaryGeneratorAction.hh"
-#include "RunAction.hh"
+#include "SeededGeneratorAction.hh"
+
 #include "EventAction.hh"
 #include "SteppingAction.hh"
 #include "SteppingVerbose.hh"
+#include "StackingAction.hh"
 
 #ifdef G4VIS_USE
 #include "G4VisExecutive.hh"
@@ -31,7 +33,7 @@ int main(int argc, char** argv) {
 
 	// Choose the Random engine
 	CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine);
-
+	CLHEP::HepRandom::saveEngineStatus ("currentEvent.rndm");
 	// User Verbose output class
 	G4VSteppingVerbose::SetInstance(new SteppingVerbose);
 
@@ -39,12 +41,13 @@ int main(int argc, char** argv) {
 	G4RunManager * runManager = new G4RunManager;
 
 	// Set mandatory initialization classes
-	int version = DetectorConstruction::v_HGCALEE_v6;
+	int version = DetectorConstruction::HGCAL_E26_TH;
 
 	int model = DetectorConstruction::m_FULLSECTION;
 
-        bool signal = true;
+	bool signal = true;
 	std::string data = "";
+	double steelThick= 0;
 	if (argc > 2)
 		version = atoi(argv[2]);
 	if (argc > 3)
@@ -52,26 +55,28 @@ int main(int argc, char** argv) {
 	if (argc > 4)
 		signal = atoi(argv[4]);
 	if (argc > 5)
-		data = argv[5];
+		steelThick = std::stof(argv[5]);
+	if (argc > 6)
+		data = argv[6];
 	std::cout << "-- Running version " << version << " model " << model
 			<< std::endl;
 
 	runManager->SetUserInitialization(
-			new DetectorConstruction(version, model, signal));
+			new DetectorConstruction(version, model, steelThick));
 	runManager->SetUserInitialization(new PhysicsList);
 
 	// Set user action classes
-        runManager->SetUserAction(new RunAction);
 	runManager->SetUserAction(new EventAction);
-	runManager->SetUserAction(new SteppingAction);
+	runManager->SetUserAction(new SteppingAction(data));
+	runManager->SetUserAction(new StackingAction(data));
 
-        if (signal) {
-            runManager->SetUserAction(new LHEPrimaryGeneratorAction(model));
+        if (data!="") {
+            runManager->SetUserAction(new SeededGeneratorAction(model, data));
         }
         else {
             runManager->SetUserAction(new PrimaryGeneratorAction(model, signal, data));
-            runManager->Initialize();
         }
+        runManager->Initialize();
 
 	// Initialize visualization
 #ifdef G4VIS_USE
@@ -115,5 +120,3 @@ int main(int argc, char** argv) {
 
 	return 0;
 }
-
-
